@@ -278,3 +278,409 @@ CREATE TABLE users (
 - We can view a list of tables or the structures of a particular table in the psql console using meta-commands
 - Although database schema is largely a DDL(Data Definition Language), parts of it (like access and permissions) are determined by DCL (Data Control Language)
 -----------------------------------------------------------------------------------------
+
+# Alter a Table
+- Existing tables can be altered with an `ALTER TABLE` statement
+- Part of DDL and is for altering a table schema only
+- Basic syntax:  
+  `ALTER TABLE table_to_change HOW TO CHANGE THE TABLE additional arguments;`
+
+## Rename a Table
+- `ALTER TABLE users RENAME TO all_users;`
+
+## Renaming a Column
+- `ALTER TABLE table_name RENAME COLUMN column_name TO new_column_name;`
+- `ALTER TABLE all_users RENAME COLUMN username TO full_name;`
+
+## Changing Column's Datatype
+- `ALTER TABLE table_name ALTER COLUMN column_name TYPE datatype;`
+- `ALTER TABLE all_users ALTER COLUMN full_name TYPE VARCHAR(25);`
+
+## Adding a Constraint
+- Instead of altering constraints, like we do columns and datatypes, we add to or remove constraints from the column definition.
+- The syntax for constraints can vary depending on the type of constraint
+  - Some types of constraints are considered 'table constraints' (even if they apply to a specific column) and others, such as `NOT NULL` and `DEFAULT` are considered 'column constraints'
+- Adding a column constraint:  
+  `ALTER TABLE table_name ALTER COLUMN column_name SET constraint clause;`
+- Adding a table constraint:
+  `ALTER TABLE table_name ADD CONSTRAINT constraint_name clause;`
+
+## Removing a Constraint
+- Removing constraints also has a couple of forms
+- Removing a column constraint:
+  `ALTER TABLE table_name ALTER COLUMN column_name DROP CONSTRAINT;
+- Removing a table constraint:
+  `ALTER TABLE table_name DROP CONSTRAINT constraint_name;
+
+## Adding a Column
+- `ALTER TABLE table_name ADD COLUMN new_column_name new_data_type new_constraints;`
+- `ALTER TABLE all_users ADD COLUMNS last_login timestamp NOT NULL DEFAULT NOW();`
+- `NOW()` is an SQL function that provides the current date and time when it is called
+
+## Removing a Column
+- `ALTER TABLE table_name DROP COLUMN column_name;`
+
+## Dropping Tables
+- `DROP TABLE table_name;`
+--------------------------------------------------------------------------------------------
+
+# Inserting Data into a Table
+- Last section was all about schema: creating db, and how to create, alter, and delete the tables and columsn in it.
+
+## Data and DML
+- DML: Data Manipulation Language to add, query, change, and remove data
+- DML categorized into four main types:
+
+| DML Type | Purpose |
+|:---------|:--------|
+| `INSERT` | Add new data into table |
+| `SELECT` | AKA Queries to retrieve existing data |
+| `UPDATE` | Update existing data |
+| `DELETE` | Delete existing data |
+
+## A Bit about Crud
+- CREATE, READ, UPDATE, DELETE are analogous to INSERT, SELECT, UPDATE, DELETE
+
+## Insertion Statement Syntax
+- `INSERT INTO table_name (column1_name, column2_name,...) VALUES (data_col1, data_col2,...);`
+  - Must provide three peices of info: 
+    - Table name
+    - Names of columns we're adding data to
+    - Values we wish to store in the columns
+  - For each column specified you must supply a value
+
+## Adding Rows (AKA Tuples)
+- Each row is an individual entity, or the logical equivalent of a record, and has a corresponding value for each column in the table
+- First digit after `INSERT` return is the `oid`, second is the `count` of rows that were inserted.
+  - OID's are basically deprecated and no longer around
+
+## Adding Multiple Rows
+- If you're adding lots of data, you don't want to add each record individually
+- Syntax is similar except each row of values is comma separated
+- You don't need to have each row on a separate line, but its generally good practice
+- `INSERT INTO users (full_name) VALUES ('Jane Smith'), ('Harry Potter');`
+
+## Constraints and Adding Data
+- Constraints are at the level of stable structure/schema/DDL, but they are primarily concerned with controlling what data can be added to a table.
+
+### Default Values
+- Setting a `DEFAULT` value for a column ensures that if a value is not specified for that column in an insert statement, then the default value will be used instead.
+
+### NOT NULL Constraints
+- It doesn't always make sense for a column to have a default value- like a column that is specific to each user record, rather than some generic, default name
+- NOT NULL ensures that when a new row is added, a value must be specified for that column
+
+### UNIQUE Constraints
+- Sometimes, rather than simply ensuring a column has a value, we also want to ensure the value added for that column is unique
+
+### CHECK Constraints
+- Some columns don't need unique values, but may need to adhere to some other specific rules
+- Limits the type of data that can be included in a column and each new record is checked first to ensure the data conforms to the rules
+- `ALTER TABLE users ADD CHECK (full_name <> '');`
+  - `<>` in SQL works like `!=` and means 'not equal'
+
+### Escaping Quote Marks
+- In the string `'O'leary'`, for example, the single quote would terminate a string in PostreSQL
+   - This can be fixed by using two single quotes so that the second escapes the first
+   - `'O''Leary'`
+
+-------------------------------------------------------------------------------------
+
+# Select Queries
+- `SELECT` Statements are how we query databases
+- `SELECT column_name FROM table_name;`
+- `SELECT column_name FROM table_name WHERE condition;`
+- Things to note:
+  - Order of columns in response is order column names are specified in query
+  - Keywords tell SQL to do something specific
+  - Identifiers tell SQL what to do it to
+  - You can use identifiers with the same name as keywords by wrapping them in double quotes like "year"
+
+## ORDER BY
+- Instead of just returning only certain rows, you could also want to display the results in a particular sort of order
+- `SELECT column_name FROM table_name WHERE condition ORDER BY column_name;`
+- Things to note:
+  - When ordering booleans, `false` comes before `true`
+  - If sort value is the same, the order is arbitrary
+- Can specify which way to order as well
+- ` SELECT column_name FROM table_name WHERE condition ORDER BY column_name 'ASC'/'DESC';`
+
+## Multiply ORDER BY
+- You can order rows by one thing and then *within* any sets of rows which have identical values for that first rule, you can set a second level of ordering (comma separated)
+- `SELECT column_name FROM table_name ORDER BY column_1 DESC, column_2 DESC;`
+- Just like a `WHERE` clause, you can `ORDER BY` a column even if you aren't including it in column list
+- We can set sort direction for each column we are using to order our results (meaning we can switch between `ASC` and `DESC`)
+
+## Operators
+- Generally used as part of expression in a `WHERE` clause
+- Types: comparison, logical, and string matching
+
+### Comparison Operators
+- Used to compare one value to another, usually numerical. 
+- Normal operators:  
+  - `<`, `>`, `<=`, `>=`, `=`, and `<>` or `!=`
+- Also include *comparison predicates* which behave like operators with a special syntax
+  - `BETWEEN`, `NOT BETWEEN`, `IS DISTINCT FROM`, `IS NOT DISTINCT FROM`, `IS NULL`, and `IS NOT NULL`
+- `NULL` is special value in SQL that represents an **unknown value** (like `nil` in Ruby)
+- You can't say `WHERE column_name = NULL`.
+- When identifying `NULL`, you must use `IS NULL` or `IS NOT NULL`
+
+### Logical Operators
+- `AND`, `OR`, and `NOT`
+- `SELECT * FROM users WHERE full_name = 'Harry Potter' OR enabled = 'false';`
+
+### String Matching Operators
+- Allows you to add flexibility to conditional expressions by searching for a sub-set of the data within a column
+- Search for users with last name Smith in a column of `full_name`
+  - `SELECT * FROM users WHERE full_name LIKE '%Smith';`
+  - Use `LIKE` about where we'd use an `=` for comparison
+  - Use `%` as a wildcard (matches any user with any number of characters followed by Smith)
+  - An `_` can be used as a wildcard also, but only represents a single character
+
+## Summary
+- `SELECT` statement probably most commonly used statement in SQL
+
+---------------------------------------------------------------------------------------
+# More On Select
+- Further filter our data with `LIMIT`, `OFFSET`, and `DISTINCT`.
+
+## LIMIT and OFFSET
+- Sometimes we don't want *all* the results a `SELECT` statement might return
+  - Common in pagination
+- `SELECT * FROM users LIMIT 1;`
+  - Returns one record from users table
+- `SELECT * FROM users LIMIT 1 OFFSET 1;`
+  - Returns one record from users table BUT it skips however many rows specified by `OFFSET`, which is in this case 1 meaning we will get the second row returned
+
+## DISTINCT
+- Sometimes you have duplicate data and you only want to return unique query results
+- `SELECT DISTINCT column_name FROM table_name;`
+- `DISTINCT` can be super useful when used in conjunction with other SQL functions like `count()`
+  - `SELECT count(full_name) FROM users;`  VS. `SELECT count(DISTINCT full_name) FROM users;`
+    - The first option doesn't handle duplicate data while the second does
+
+## Functions
+- Functions are a way of working with data in SQL- they are a set of commands included as part of the RDBMS that perform particular operations on fields or data
+- Some functions provide data transformations that can be applied before returning results
+- Others simply return information on the operations carried out
+- Common types: String, Date/Time, Aggregate
+
+### String Functions
+- Perform some sort of operation on values whose data type is String
+
+| Function | Example | Notes |
+|:---------|:--------|:------|
+| `length` | `SELECT length(full_name) FROM users;` | Returns length of every user's name. Can also use in a where clause to filter name | 
+| `trim`  | `SELECT trim(leading ' ' from full_name) FROM users;` | If any data in `full_name` column had space in front of the name, `trim` would remove it |
+
+### Date/Time Functions
+- Perform operations on date and time data- many take time or timestamp inputs
+
+| Function | Example | Notes |
+|:---------|:--------|:------|
+| `date_part`| `SELECT full_name, date_part('year', last_login) FROM users;` | Allows us to view a table that only contains a part of a user's timestamp taht we specify.  This query only allows us to see a user's name and the year of their `last_login`.  Sometimes data down to the second is not needed |
+|`age`|`SELECT full_name, age(last_login) FROM users;`| The `age` function when passed a single timestamp as an argument calculates the time elapsed between timestamp and current time.  This query allows us to see how long its been since each use last logged in.|
+
+### Aggregate Functions
+- Perform aggregation- that is they compute a single result from a set of input values
+
+| Function | Example | Notes |
+|:---------|:--------|:------|
+|`count`|`SELECT count(id) FROM users;`| Returns number of values in column passed in as argument.  Could find number of users who have enabled account, or have certain last names, etc.|
+|`sum`|`SELECT sum(id) FROM users;`| Not to be confused with count- this adds the values of all rows being selected|
+|`min`|`SELECT min(last_login) FROM users;`| Returns lowest value in a column for all rows being selected|
+|`max`|`SELECT max(last_login) FROM users;`| Returns highest value in a column for all rows being selected|
+|`avg`|`SELECT avg(id) FROM users;`| Returns average of numeric type values for all rows being selected.
+
+- Aggregate functions really start to be useful when grouping table rows together (GROUP BY)
+
+### GROUP BY
+- Sometimes you need to combine data results together to form more meaningful information
+- Ex: count number of users who have accounts that are enabled
+- `SELECT count(id) FROM users WHERE enabled = true;` - only shows records where enabled = true
+- Using GROUP BY, we can split the query and have it return two separate groups
+  - `SELECT enabled, count(id) FROM users GROUP BY enabled;`
+  - We don't technically need to include the enabled column in our query but it m akes the output more meaningful as we can clearly see the correlation between the count and the values in enabled.
+- If you include columns in the column list alongside the function then those columns **must** also be included in a GROUP BY clause
+
+-------------------------------------------------------------------------
+# Multiple Tables
+
+## Normalization
+- The process of splitting up data across multiple tables, and creating relationships between them is normaliation
+  - Purpose: remove duplication and improve data integrity
+- Normalization is a deep topic with complex sets of rules to dictate the extent to which a database is judged as normalized.  These rule-sets are known as "normal forms"
+- Two main things to know:
+  - The reason for normalization is to reduce data redundancy and improve data integrity
+  - The mechanism for carrying out normalization is arranging data in multiple tables and defining relationships between them
+- In order to determine which relationships should exist and what the table should be, it's best to "zoom out" and think at a higher level of abstraction (database design)
+
+## Database Design
+- The process of Database Design involves defining **entities** to represent different sorts of data and designing **relationships** between those entities.
+
+### Entities
+- An entity represents a real world object, or a set of data that we want to model within our database; we can often identify these as the major nouns of the system we're modeling.
+
+### Relationships
+- Once the entities are decided, and table schema is pretty much set up, we can start to form the relationships between the entities.
+- Create a diagram to show an abstract representation of our various entities and also the relationships between them: this diagram is a simple Entity Relationship Diagram (**ERD**)
+- An ERD is a graphical representation of entities and their relationships to each other, and is a commonly used tool in database design.
+
+## Keys
+- Keys are a special type of constraint used to establish relationships and uniqueness
+- Keys can be used to identify a specific row in the current table, or to refer to a specific row in another table (primary keys and foreign keys)
+
+### Primary Keys
+- A unique identifier for a row of data
+- Making a column a primary key is essentially equivalent to adding `NOT NULL` and `UNIQUE` constraints to the column
+- Syntax to explicitly set primary key:
+  `ALTER TABLE table_name ADD PRIMARY KEY (column_name);`
+- Although any table can have `UNIQUE` and `NOT NULL` constraints applied to them, each table can only have one primary key
+- It is common practice for the Primary Key to be a column named `id`.
+
+### Foreign Key
+- Allows us to associate a row in one table to a row in another table by setting a column in one table as a foreign key and having that oclumn reference another table's primary key column
+- This is accomplished using the `REFERENCES` keyword
+  `FOREIGN KEY (foreignkey_column_name) REFERENCES target_table_name (primarykey_column_name);`
+- By setting up this reference, we're ensuring *referential integrity*
+  - Referential integrity is the assurance that a column value within a record must reference an existing value; it it doesn't then an error is thrown
+  - In other words, PostgreSQL won't allwo you to add a value to the Foreign Key column of a table if the Primary Key column of the table it's referencing does not already contain that value
+
+### Entity Relationships
+- One to One
+- One to Many
+- Many to Many
+
+## One-to-One
+- Exists when a particular entity instance exists in one table and it can only have one associated entity instance in another table
+  - Example: a user can only have one addres and an address can only belong to one user
+
+## Referential Integrity
+- Concept used when discussing relational data which states that table relationships must always be consistent.
+- Different RDBMSes might enforce referential integrity rules differently, but the concept is the same..
+- If you try to use an address for a user that already has one, for example, PostgreSQL will thrown an error
+- If you try to use an address for a user that doesn't exist, that will also throw an error
+- Modality of the relationship allows us to be able to add a user without an address but can't add an address without a user
+
+### The ON DELETE Clause
+- `ON DELETE CASCADE` clause means that if the row being referenced is deleted, the row referencing it is also deleted.
+- Alternatives to `CASCADE` are `SET NULL` or `SET DEFAULT` which do just sets a new value in appropriate column for that row.
+- Determining what to do in situations where you delete a row that is referenced by another row is an important design decision and is part of the concept of maintaning referential integrity.
+
+## One-to-Many
+- A one-to-many relationsihp exists between two entities if an entity instance in one of the tables can be associated with multiple records in the other table and the opposite relationship does not exist
+  - Ex: a book has many reviews, but a review belongs to only one book
+- Unlike one-to-one relationship- primary keys and foreign keys reference different columns
+
+## Many-to-Many
+- Many-to-many relationship exists between two entities when if for one entity instance there may be multiple records in the other table, and vice versa.
+- Ex: A user can checkout many books and a book can be checked out by many users (over time)
+- In order to implement this sort of relationship, we need to introduce a third, cross-reference table.
+  - This table holds the relationship between the two entities, by having two foreign keys, each of which reference the primary key of one of the tables for which we want to create this relationship
+  - These tables can have additional columns that provide additional context to the relationship and the association between the two entities
+- Can be thought of as combining two one-to-many relationships
+
+------------------------------------------------------------------------------------------------------
+
+# SQL JOINS
+- SQL handles queries across more than one table through use of JOINs.
+- JOINs are clauses in SQL statements that link two tables together, usually based on the keys taht define the relationship between those two tables.
+- Types of JOINS:
+  - INNER
+  - LEFT OUTER
+  - RIGHT OUTER
+  - FULL OUTER
+  - CROSS
+- They all do slightly diferent things but the basic theory behind them all is the same
+
+### JOIN Syntax
+- `SELECT [table_name1.column_name1, table_name1.column_name2] join_type JOIN table_name2 ON (join_condition);`
+- The first part is essentially the SELECT column_list FROM form we've already seen with slight difference that columnb names are prepended by table names in column list.
+- Second part that joins tables : `table_name1 join_type JOIN table_name2 ON (join_condition)`
+  - In order to join one table to another, PostgreSQL needs to know several pieces of info:
+    - The name of the first table to join
+    - The type of join to use
+    - The name of the second table to join
+    - The join condition
+  - This info is combined together using JOIN and ON keywords
+  - The part that comes after the `ON` keyword is the *join condition* which defines the logic by which a row in one table is joined to a row in another table
+    - In most cases, this join is created using the primary key of one table and the foreign key of table we want to join it with
+
+## Types of Joins
+
+### INNER JOIN
+- Returns a result set that contains the common elements of the tables, i.e. the intersection where they match on the joined condition.
+- INNER JOINS are the most frequently used JOINS, and are default join type
+
+### LEFT JOIN
+- Takes all the rows from one table, defined as the LEFT table, and joins it with a second table
+- The JOIN is based on the conditions supplied in the parenthesis
+- A LEFT JOIN will always include the rows from the LEFT table, even if there are no matching rows in the table it is JOINed with
+
+### RIGHT JOIN
+- Similar to a LEFT JOIN except that the roles between the two tables are reversed and all the rows on the second table are included along with any matching row from the first table
+
+### FULL JOIN
+- Combination of LEFT JOIN and RIGHT JOIN
+- This type of join contains all of the rows from both of the tables
+- Where the join cnodition is met, the rows of the two tables are joined
+- Any rows where the join condition is not met, the oclumns for the other table have NULL values for that row
+
+### CROSS JOIN
+- Cartesian JOIN returns all rows from one table crossed with every row from the second table
+- In other words, the join table of a cross join contains every possible combination of rows from the tables that have been joined.  Since it returns all combos, a CROSS JOIN does not need to match rows using a join condition, therefore it does not have an ON clause
+- `SELECT * FROM users CROSS JOIN addresses;`
+
+## Multiple Joins
+- It is posisble and common to join more than two tables together
+- To join multiple tables together, there must be a logical relationship between the tables involved
+- Ex: Users, Checkouts, and Books tables
+-`SELECT users.full_name, books.title, checkouts.checkout_date FROM users INNER JOIN checkouts ON (users.id = checkouts.user_id) INNER JOIN books ON (books.id = checkouts.book_id);`
+- Join is implemented by using Primary Key of one table and the Foreign key of that table in a different table
+
+## Aliasing
+- Aliasing allows us to specify another name for a column or table and use that name in later parts of query to allow for more concise syntax
+- The AS keyword allows us to alias
+  ```SELECT u.full_name, b.title, c.checkout_date
+      FROM users AS u
+      INNER JOIN checkouts AS c ON (u.id = c.user_id)
+      INNER JOIN books AS b ON (b.id = c.book_id);
+  ```
+- You can get even shorter by leaving out the AS keyword entirely
+  - `FROM users u`
+  - `FROM users AS u`
+  - Both equivalent SQL clauses
+
+### Column Aliasing
+- Aliasing isn't just useful for shortening SQL queries, you can also use it to display more meaningful info in our result table
+- `SELECT count(id) AS "Number of Books Checked Out" FROM checkouts;`
+  - Gives us more helpful output
+
+## Subqueries
+- Although joining tables together is probably the most common way of working with mulitple tables, you can often achieve the same results through use of a subquery
+- Imagine executing a SELECT query and then using the results of that SELECT query as a condition in *another* SELECT query
+- This is called nesting and the query that is nested is referred to as a **subquery**.
+- Example: select users that have no books checked out
+  - Find users who's user_id is not in the checkouts table
+  - `SELECT u.full_name FROM users u WHERE u.id NOT IN (SELECT c.user_id FROM checkouts c);`
+- The `NOT IN` clause compares current user_id to all rows in result of the subquery.  If that ID number isn't part of the subquery results, then the full_name for the current row is added to the results et.
+- Other useful Subquery expressions: `IN`, `NOT IN`, `ANY`, `SOME`, and `ALL`.
+
+### Subqueries vs Joins
+- As a general rule, JOINS are faster to run than subqueries
+
+## Summary
+- One of the most important things to remember about how joins work is that we set a condition that compares a value from the first table (usually a primary key), with one from the second table (usually a foreign key).  If the condition that uses these two values evaluates to true, then the row that holds teh first value is joined with the row that holds the second value.
+
+| JOIN TYPE | Notes |
+|:----------|:------|
+| INNER | Combines rows from two tables whenever join condition is met |
+| LEFT | Same as inner, except rows from first table are added to join table, regardless of evaluation of condition|
+| RIGHT | Same as inner, exccept rows from second table are added to join table, regardless of evaluation of condition |
+| FULL | A combination of left and right joins |
+| CROSS | No join condition- a result of matching of every row from first table with the second table, cross product of all rows across both tables |
+
+- Alias a table to better manage column names and shorten queries
+-------------------------------------------------------------------------------------
+
+# Summary and Additional Resources
