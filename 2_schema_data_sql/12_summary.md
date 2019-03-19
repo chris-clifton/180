@@ -1,0 +1,16 @@
+# Summary
+- SQL is a special-purpose, declarative language used to manipulate the structure and values of datasets stored in a relational database
+- Three sub languages: DDL, DML, DCL
+- SQL code is made of statements
+- PostgreSQL provides many data types
+- NULL is special value that represents the absence of any other value
+  - must be compared using IS NULL and IS NOT NULL
+- Database dumps can be loaded using `psql -d db_name < file_to_import.sql`
+- Table columns can have default values, specified by using SET DEFAULT
+- Table columns can disallow storing NULL values with SET NOT NULL
+- CHECK constraints are rules that must be met by data stored in a table
+- Natural Key is an existing value in a dataset than can be used to uniquely id each row of data in dataset
+- Surrogate Key is value created soley for purpose of identifying a row of data in db table
+- Primary Key is value used to uniquely id rows in a table.  Cannot be NULL and must be unique within table
+- `serial` columns typically used to create auto-incrementing integer columns
+- AS used to rename tables and columns within an SQL statement
