@@ -37,3 +37,5 @@
 ## One to One Relationship
 - Are actually pretty rare in a real database- most often, if a one-to-one relationship does exist at a conceptual level, the two entities will be joined together at the physical level and included in the same table
 
+# JOIN Video
+- FULL OUTER JOIN is a sort of a combination of the LEFT OUTER JOIN and RIGHT OUTER JOIN.  First an inner join is done.  Next, a LEFT OUTER JOIN without an additional INNER JOIN.  Finally, a RIGHT OUTER JOIN is added without an additional INNER JOIN
