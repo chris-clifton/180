@@ -39,3 +39,6 @@
 
 # JOIN Video
 - FULL OUTER JOIN is a sort of a combination of the LEFT OUTER JOIN and RIGHT OUTER JOIN.  First an inner join is done.  Next, a LEFT OUTER JOIN without an additional INNER JOIN.  Finally, a RIGHT OUTER JOIN is added without an additional INNER JOIN
+
+# As percent percentage join
+``` SELECT COUNT(DISTINCT tickets.customer_id) / COUNT(DISTINCT customers.id)::float * 100 AS percent FROM customers LEFT OUTER JOIN tickets on tickets.customer_id = customers.id; ```

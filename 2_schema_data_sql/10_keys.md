@@ -32,3 +32,6 @@
 ### UUUID
 - Universally Unique Identifiers are very large numbers that are used to identify individual objects or, when working witha database, rows in a database
 - Often represented using hexadecimal strings (super big, as well)
+
+# Remove primary key on existing column
+``` ALTER TABLE films DROP CONSTRAINT films_pkey; ```

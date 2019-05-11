@@ -52,13 +52,14 @@
   2. SQL queries using standard SQL syntax
 
 ## Meta-Commands
+- Start Postgress ` psql postgres `
 - The syntax for a psql console meta-command is a backslash `\` followed y the command and any optional arguments
   - `\conninfo` is the command for connection information of curernt connection to database
 - Meta-commands can be used for a number of different things, such as connecting to a different database, listing tables, describing the structure of a particular table, setting environment variables, etc.
 - `\q` quits the psql console and returns to normal command line
 - Meta commands do not need to be terminated with a colon
 
-## SQL Statements
+## SQL Statements - Select Statement
 - SQL statements are commands issued to the db using SQL syntax
 - Always terminate in a semi-colon, meaning you can actually write statements over multiple lines and postgresql will not execute the statement until it reaches the semi-colon
 - The `SELECT` statement is used to retrieve data from a database
@@ -152,11 +153,11 @@
 - Keep name self-descriptive
 - Names written in snake_case
 
-## Connecting to a Database
+## Connect to a Database
 - When we are in the psql console itself, we can connect to a different databse by using the `\c` or `\connect` meta-commands
 - You can check which database you are in with `SELECT current_database();` but you would never need to do this since the prompt just tells you...
 
-## Deleting Databases
+## Deleting Databases // Delete Database
 - SQL command `DROP DATABASE database_name;`, basically the opposite of `CREATE DATABASE`
 - You can't drop the database you are currently connected to this way
 
@@ -199,8 +200,8 @@
     - Basic format is:
 ```sql
 CREATE TABLE table_name (
-  column_1_name column_1_data_type [constraints, ...],
-  column_2_name column_2_data_type [constraints, ...],
+  column_1_name column_1_data_type CONSTRAINTS, ...,
+  column_2_name column_2_data_type CONSTRAINTS, ...,
   .
   .
   .
@@ -263,7 +264,7 @@ CREATE TABLE users (
   - Shows column names, data type, collation, nullable, and default values
 
 ## Schema and DCl
-- Important to note the info returned by `\d` and `\dt` relate only to the schema of the db, not the data
+- Important to note the info returned by `\d` and `\dt` relate only to the schema of the db, not the data ( \dt to see owner of table re: security)
 - Some parts of a database's schema are controller and managed by another SQL sub-language DCL(Data Control Language)
 - DCL is concerned with controlling who is allowed to perform certain actions within a database, or in other words, the security of a database
 - The security settings determined by DCL are also part of the schema
@@ -292,18 +293,34 @@ CREATE TABLE users (
 - `ALTER TABLE table_name RENAME COLUMN column_name TO new_column_name;`
 - `ALTER TABLE all_users RENAME COLUMN username TO full_name;`
 
-## Changing Column's Datatype
+## Changing Column's Datatype // alter datatype // change datatype // alter column
 - `ALTER TABLE table_name ALTER COLUMN column_name TYPE datatype;`
 - `ALTER TABLE all_users ALTER COLUMN full_name TYPE VARCHAR(25);`
+- When converting data types, if there is no implicit conversion from the old type to the new type, you need to add a `USING` clause to the statement with an expression that specifies how to compute the new column value from the old.  Sometimes these expressions can be quite complex but a simple form would be something like:
+  ```SQL
+  ALTER COLUMN column_name
+  TYPE new_data_type
+  USING column_name::new_data_type
+  ```
+- Can use comma separated statements and do multiple things at once:
+  ```SQL
+  ALTER TABLE celebrities
+  ALTER COLUMN date_of_birth TYPE date
+  USING date_of_birth::date,
+  ALTER COLUMN date_of_birth SET NOT NULL;
+  ```
 
 ## Adding a Constraint
-- Instead of altering constraints, like we do columns and datatypes, we add to or remove constraints from the column definition.
+- Instead of altering constraints, like we do columns and datatypes, **we add to or remove constraints** from the column definition.
+- Differences constraints column names data types: names/types required, constraints optional. Columns can have only one name/datatype but cna have more than one constraint.
 - The syntax for constraints can vary depending on the type of constraint
   - Some types of constraints are considered 'table constraints' (even if they apply to a specific column) and others, such as `NOT NULL` and `DEFAULT` are considered 'column constraints'
+  - Column constraints: NOT NULL, DEFAULT
 - Adding a column constraint:  
   `ALTER TABLE table_name ALTER COLUMN column_name SET constraint clause;`
 - Adding a table constraint:
   `ALTER TABLE table_name ADD CONSTRAINT constraint_name clause;`
+  `ALTER TABLE table_name ADD CONSTRAINT constraint_name CONSTRAINT_TYPE (column_name);`
 
 ## Removing a Constraint
 - Removing constraints also has a couple of forms
@@ -311,11 +328,15 @@ CREATE TABLE users (
   `ALTER TABLE table_name ALTER COLUMN column_name DROP CONSTRAINT;
 - Removing a table constraint:
   `ALTER TABLE table_name DROP CONSTRAINT constraint_name;
+  Example: `ALTER TABLE animals ADD CONSTRAINT unique_binomial_name UNIQUE (binomial_name);`
+- If constraint has a name you can use that to drop it without identifying column 
+  Example: `ALTER TABLE animals DROP CONSTRAINT unique_binomial_name`
 
 ## Adding a Column
 - `ALTER TABLE table_name ADD COLUMN new_column_name new_data_type new_constraints;`
 - `ALTER TABLE all_users ADD COLUMNS last_login timestamp NOT NULL DEFAULT NOW();`
 - `NOW()` is an SQL function that provides the current date and time when it is called
+  - alias = `CURRENT_TIMESTAMP`
 
 ## Removing a Column
 - `ALTER TABLE table_name DROP COLUMN column_name;`
@@ -359,6 +380,7 @@ CREATE TABLE users (
 - Syntax is similar except each row of values is comma separated
 - You don't need to have each row on a separate line, but its generally good practice
 - `INSERT INTO users (full_name) VALUES ('Jane Smith'), ('Harry Potter');`
+- `INSERT INTO users (full_name, favorite_color, birthday) VALUES ('Harry Potter', 'red', 06/06/66), ('Jane Smith', 'blue', 08/31/87);`
 
 ## Constraints and Adding Data
 - Constraints are at the level of stable structure/schema/DDL, but they are primarily concerned with controlling what data can be added to a table.
@@ -395,6 +417,10 @@ CREATE TABLE users (
   - Keywords tell SQL to do something specific
   - Identifiers tell SQL what to do it to
   - You can use identifiers with the same name as keywords by wrapping them in double quotes like "year"
+  - Identifiers and Key Words
+      - In a SQL statement such as SELECT enabled, full_name FROM users; there are identifiers and keywords. The identifiers, such as enabled, full_name, and users, identify tables or columns within a table. The keywords, such as SELECT and FROM, tell PostgreSQL to do something specific.
+      - SQL is case insensitive so it depends on the assumption that anything that is not a keyword (operator, or function) is an identifier.
+      - Best to avoid naming columns the same as keywords but you can double quote them if you have to ex "year"
 
 ## ORDER BY
 - Instead of just returning only certain rows, you could also want to display the results in a particular sort of order
@@ -440,6 +466,8 @@ CREATE TABLE users (
 ## Summary
 - `SELECT` statement probably most commonly used statement in SQL
 
+
+
 ---------------------------------------------------------------------------------------
 # More On Select
 - Further filter our data with `LIMIT`, `OFFSET`, and `DISTINCT`.
@@ -481,6 +509,13 @@ CREATE TABLE users (
 | `date_part`| `SELECT full_name, date_part('year', last_login) FROM users;` | Allows us to view a table that only contains a part of a user's timestamp taht we specify.  This query only allows us to see a user's name and the year of their `last_login`.  Sometimes data down to the second is not needed |
 |`age`|`SELECT full_name, age(last_login) FROM users;`| The `age` function when passed a single timestamp as an argument calculates the time elapsed between timestamp and current time.  This query allows us to see how long its been since each use last logged in.|
 
+- Example date_part:
+  ```sql
+  encyclopedia=# SELECT first_name
+  encyclopedia-# FROM celebrities
+  encyclopedia-# WHERE date_part('year', date_of_birth) = 1958;
+  ```
+
 ### Aggregate Functions
 - Perform aggregation- that is they compute a single result from a set of input values
 
@@ -496,6 +531,7 @@ CREATE TABLE users (
 
 ### GROUP BY
 - Sometimes you need to combine data results together to form more meaningful information
+- The GROUP BY statement is often used with aggregate functions (COUNT, MAX, MIN, SUM, AVG) to group the result-set by one or more columns
 - Ex: count number of users who have accounts that are enabled
 - `SELECT count(id) FROM users WHERE enabled = true;` - only shows records where enabled = true
 - Using GROUP BY, we can split the query and have it return two separate groups
@@ -504,6 +540,32 @@ CREATE TABLE users (
 - If you include columns in the column list alongside the function then those columns **must** also be included in a GROUP BY clause
 
 -------------------------------------------------------------------------
+# Update Table
+
+## Updating Data
+- Update specific columns
+  - ```SQL
+    UPDATE table_name SET column_name1 = value1, column_name2 = value2 WHERE expression;
+    ```
+- Update all rows in a column
+  - ```SQL
+    UPDATE table_name SET column_name = value;
+    ```
+- Update specific rows
+  - ```SQL
+    UPDATE table_name SET column_name = value WHERE expression AND/OR another expression;
+    ```
+
+# Deleting Data // Delete Data
+- ` DELETE FROM table_name WHERE expression `
+- ` DELETE FROM table name` to delete all rows
+## Update vs Delete
+- Update can update one or more columns within one or more rows using the SET clause.  With Delete, you can only delete one or more entire rows and not particular pieces of data from within those rows.
+- Though its not possible to delete specific values within a row, you can approximate this by using NULL.  If you use Update statements to set a specific value to NULL, although its not technically deleting it, we are effectively removing that value.
+- In a SET clause you can use `= NULL` since its not being used as comparison and is actually setting the value to NULL.
+- If column has a not null constraint, then it is no tpossible to set its value to NULL and an error will be thrown.
+
+
 # Multiple Tables
 
 ## Normalization
@@ -511,8 +573,8 @@ CREATE TABLE users (
   - Purpose: remove duplication and improve data integrity
 - Normalization is a deep topic with complex sets of rules to dictate the extent to which a database is judged as normalized.  These rule-sets are known as "normal forms"
 - Two main things to know:
-  - The reason for normalization is to reduce data redundancy and improve data integrity
-  - The mechanism for carrying out normalization is arranging data in multiple tables and defining relationships between them
+  - **The reason for normalization** is to reduce data redundancy and improve data integrity
+  - **The mechanism for carrying out normalization** is arranging data in multiple tables and defining relationships between them
 - In order to determine which relationships should exist and what the table should be, it's best to "zoom out" and think at a higher level of abstraction (database design)
 
 ## Database Design
@@ -533,18 +595,23 @@ CREATE TABLE users (
 ### Primary Keys
 - A unique identifier for a row of data
 - Making a column a primary key is essentially equivalent to adding `NOT NULL` and `UNIQUE` constraints to the column
-- Syntax to explicitly set primary key:
+- Syntax to explicitly set primary key in existing table:
   `ALTER TABLE table_name ADD PRIMARY KEY (column_name);`
 - Although any table can have `UNIQUE` and `NOT NULL` constraints applied to them, each table can only have one primary key
 - It is common practice for the Primary Key to be a column named `id`.
 
 ### Foreign Key
-- Allows us to associate a row in one table to a row in another table by setting a column in one table as a foreign key and having that oclumn reference another table's primary key column
+- Allows us to associate a row in one table to a row in another table by setting a column in one table as a foreign key and having that column reference another table's primary key column
 - This is accomplished using the `REFERENCES` keyword
   `FOREIGN KEY (foreignkey_column_name) REFERENCES target_table_name (primarykey_column_name);`
 - By setting up this reference, we're ensuring *referential integrity*
   - Referential integrity is the assurance that a column value within a record must reference an existing value; it it doesn't then an error is thrown
   - In other words, PostgreSQL won't allwo you to add a value to the Foreign Key column of a table if the Primary Key column of the table it's referencing does not already contain that value
+- **Add foreign keys to existing table**:
+  - ` ALTER TABLE countries ADD FOREIGN KEY (column_name) REFERENCES other_table(other_table_primary_key); `
+  
+  - ` ALTER TABLE child_table ADD CONSTRAINT constraint_name FOREIGN KEY (c1) REFERENCES parent_table (p1); `
+  - ` ALTER TABLE order_items ADD CONSTRAINT order_items_order_id_fkey FOREIGN KEY (order_id) REFERENCES orders (id) ON DELETE CASCADE; `
 
 ### Entity Relationships
 - One to One
@@ -552,8 +619,18 @@ CREATE TABLE users (
 - Many to Many
 
 ## One-to-One
+- The id that is the primary key of the other table is used as both the primary key and the foreign key of the other table
 - Exists when a particular entity instance exists in one table and it can only have one associated entity instance in another table
-  - Example: a user can only have one addres and an address can only belong to one user
+- Example: a user can only have one address and an address can only belong to one user
+- ```sql
+  CREATE TABLE addresses (
+    user_id int, -- Both a primary and foreign key
+    street varchar(30) NOT NULL,
+    city varchar(30) NOT NULL,
+    state varchar(30) NOT NULL,
+    PRIMARY KEY (user_id),
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE );
+  ```
 
 ## Referential Integrity
 - Concept used when discussing relational data which states that table relationships must always be consistent.
@@ -565,12 +642,16 @@ CREATE TABLE users (
 ### The ON DELETE Clause
 - `ON DELETE CASCADE` clause means that if the row being referenced is deleted, the row referencing it is also deleted.
 - Alternatives to `CASCADE` are `SET NULL` or `SET DEFAULT` which do just sets a new value in appropriate column for that row.
-- Determining what to do in situations where you delete a row that is referenced by another row is an important design decision and is part of the concept of maintaning referential integrity.
+- Determining what to do in situations where you delete a row that is referenced by another row is an important design decision and is part of the concept of maintaining referential integrity.
 
 ## One-to-Many
 - A one-to-many relationsihp exists between two entities if an entity instance in one of the tables can be associated with multiple records in the other table and the opposite relationship does not exist
   - Ex: a book has many reviews, but a review belongs to only one book
 - Unlike one-to-one relationship- primary keys and foreign keys reference different columns
+- Primary key will reference it's own ID column usually
+- Foreign key will be assigned to a column called `other_table_id` and reference `othertable(othercolumn)`
+  - The foreign key column won't be bound to the unique constraint of the primary key so the same value from the id column of the other table will be able to appear multiple times in this column.  In other words, a book can have many reviews.
+- Must setup the table being referenced first.  If you try to set up a table and it references another table that doesn't exist or isn't populated with the data, you will get an error.
 
 ## Many-to-Many
 - Many-to-many relationship exists between two entities when if for one entity instance there may be multiple records in the other table, and vice versa.
@@ -635,13 +716,14 @@ CREATE TABLE users (
 - It is posisble and common to join more than two tables together
 - To join multiple tables together, there must be a logical relationship between the tables involved
 - Ex: Users, Checkouts, and Books tables
--`SELECT users.full_name, books.title, checkouts.checkout_date FROM users INNER JOIN checkouts ON (users.id = checkouts.user_id) INNER JOIN books ON (books.id = checkouts.book_id);`
+- ` SELECT users.full_name, books.title, checkouts.checkout_date FROM users INNER JOIN checkouts ON (users.id = checkouts.user_id) INNER JOIN books ON (books.id = checkouts.book_id); `
 - Join is implemented by using Primary Key of one table and the Foreign key of that table in a different table
 
 ## Aliasing
 - Aliasing allows us to specify another name for a column or table and use that name in later parts of query to allow for more concise syntax
 - The AS keyword allows us to alias
-  ```SELECT u.full_name, b.title, c.checkout_date
+  ```sql
+      SELECT u.full_name, b.title, c.checkout_date
       FROM users AS u
       INNER JOIN checkouts AS c ON (u.id = c.user_id)
       INNER JOIN books AS b ON (b.id = c.book_id);
@@ -653,7 +735,7 @@ CREATE TABLE users (
 
 ### Column Aliasing
 - Aliasing isn't just useful for shortening SQL queries, you can also use it to display more meaningful info in our result table
-- `SELECT count(id) AS "Number of Books Checked Out" FROM checkouts;`
+- ` SELECT count(id) AS "Number of Books Checked Out" FROM checkouts; `
   - Gives us more helpful output
 
 ## Subqueries
@@ -683,4 +765,76 @@ CREATE TABLE users (
 - Alias a table to better manage column names and shorten queries
 -------------------------------------------------------------------------------------
 
-# Summary and Additional Resources
+# JOIN/SUBQUERIES EXERCISES
+
+## 2. Write query to return names and capitals of all European countries
+### JOIN with WHERE 
+  ```sql
+  encyclopedia=# SELECT countries.name, countries.capital
+  encyclopedia-# FROM countries JOIN continents
+  encyclopedia-# ON countries.continent_id = continents.id
+  encyclopedia-# WHERE continents.continent_name = 'Europe';
+  ```
+
+## 7. Return a list of all orders and their associated product items
+### multiple joins
+  ```sql
+  encyclopedia=# SELECT countries.name, countries.capital
+  encyclopedia-# FROM countries JOIN continents
+  encyclopedia-# ON countries.continent_id = continents.id
+  encyclopedia-# WHERE continents.continent_name = 'Europe';
+  ```
+
+## 8. Return ID of any order that includes Fries. Use table aliasing in query.
+### join where alias
+  ```sql
+  ls_burger=# SELECT o.id
+  ls_burger-# FROM orders AS o JOIN order_items AS oi
+  ls_burger-# ON o.id = oi.order_id
+  ls_burger-# JOIN products AS p
+  ls_burger-# ON oi.product_id = p.id
+  ls_burger-# WHERE p.product_name LIKE 'Fries';
+  ```
+
+## 9. Build on previous query - return name of any customer who ordered fries as "Customers who like fries"- don't repeat same customer name more than once in results
+### multiple join
+  ```sql
+  ls_burger=# SELECT DISTINCT c.customer_name AS "Customers who like Fries"
+  ls_burger-# FROM customers AS c JOIN orders as o
+  ls_burger-# ON c.id = o.customer_id
+  ls_burger-# JOIN order_items AS oi
+  ls_burger-# ON o.id = oi.order_id
+  ls_burger-# JOIN products AS p
+  ls_burger-# ON oi.product_id = p.id
+  ls_burger-# WHERE p.product_name = 'Fries';
+  ```
+
+## 10. Write query to return total cost of Natash O'Shea orders
+### sum multiple join
+  ```sql
+  ls_burger=# SELECT sum(p.product_cost)
+  ls_burger-# FROM customers AS c JOIN orders as o
+  ls_burger-# ON c.id = o.customer_id
+  ls_burger-# JOIN order_items AS oi
+  ls_burger-# ON o.id = oi.order_id
+  ls_burger-# JOIN products AS p
+  ls_burger-# ON oi.product_id = p.id
+  ls_burger-# WHERE c.customer_name = 'Natasha O''Shea';
+  ```
+
+## 11. Query to return name of every product included in an order alongside number of times it has been ordered (add order by desc for clarity)
+  ```sql
+  ls_burger=# SELECT p.product_name, COUNT(oi.id)
+  ls_burger-# FROM products AS p JOIN order_items AS oi
+  ls_burger-# ON p.id = oi.product_id
+  ls_burger-# GROUP BY p.product_name;
+  ls_burger-# ORDER BY count DESC;
+  ```
+  ### same with aliasing
+  ```sql
+  ls_burger=# select p.product_name AS "Product Name", COUNT(oi.id) as "Total Orders"
+  ls_burger=# FROM products p JOIN order_items oi 
+  ls_burger=# ON p.id = oi.product_id 
+  ls_burger=# GROUP BY p.product_name
+  ls_burger=# ORDER BY "Total Orders" DESC;
+  ```

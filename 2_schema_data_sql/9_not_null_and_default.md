@@ -5,3 +5,5 @@
 - These rules allow users of system to make certain assumptions about the data that lead to simpler solutions
 
 - You can't make a column NOT NULL if it already contains NULL values.  Fix by deleting problematic rows and adding them back.
+
+- Result of using an operator on a NULL value = resulting value will also be NULL, which signifies an unknown value.

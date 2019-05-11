@@ -22,7 +22,9 @@
   ```sql
     ALTER TABLE orders ADD CONSTRAINT orders_product_id_fkey FOREIGN KEY (product_id) REFERENCES product(id);
   ```
+  ```sql
+    ALTER TABLE table_name ADD CONSTRAINT make_a_constraint_name FOREIGN KEY (column_to_make_into_fkey) REFERENCES other_table_name(other_table_column);
+  ```
 
 ## Referential Integrity
 - One of main benefits of using foreign key constraints is to preserve the *referential integrity* of the data in database.  It does this by ensuring that every value in a foreign key column exists in the primary key column of the referenced table.  Attempts to insert rows that violate the tables constraints will be rejected.
-
